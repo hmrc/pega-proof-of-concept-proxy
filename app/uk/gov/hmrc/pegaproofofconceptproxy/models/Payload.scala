@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.pegaproofofconceptproxy.config
+package uk.gov.hmrc.pegaproofofconceptproxy.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.libs.json.{Json, OFormat}
 
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
+final case class Payload(data: String)
 
-  val appName: String = config.get[String]("appName")
-  val pegaProxyStub: PegaProxyStubConfig = PegaProxyStubConfig(
-    url = config.get[String]("pega-proof-of-concept-stubs.baseUrl") + config.get[String]("pega-proof-of-concept-stubs-uris.submit-payload")
-  )
+object Payload {
+
+  implicit val formats: OFormat[Payload] = Json.format[Payload]
 }
-
-final case class PegaProxyStubConfig(
-    url: String
-)
