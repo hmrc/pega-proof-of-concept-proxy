@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.pegaproofofconceptproxy.controllers
+package uk.gov.hmrc.pegaproofofconceptproxy.utils
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import org.scalacheck.Gen
+import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject()(cc: ControllerComponents)
-    extends BackendController(cc) {
-
-  def hello(): Action[AnyContent] = Action.async { implicit _ =>
-    Future.successful(Ok("Hello world"))
-  }
+trait Generators {
+  val nonEmptyStringGen: Gen[String] = for {
+    length <- Gen.chooseNum(1, 50)
+    str <- Gen.listOfN(length, Gen.alphaChar).map(_.mkString)
+  } yield str
+  val nonEmptyPayload: Gen[Payload] = for {
+    value <- nonEmptyStringGen
+  } yield Payload(value)
 }
