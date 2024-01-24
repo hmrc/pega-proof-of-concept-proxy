@@ -33,8 +33,6 @@ class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig)(implicit
 
   val pegaUrl: String = config.pegaUrl.url
   def submitPayload(payload: Payload)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    println("-----------------------")
-    println(pegaUrl)
     client.post(url"$pegaUrl")
       .withBody(Json.toJson(payload))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
