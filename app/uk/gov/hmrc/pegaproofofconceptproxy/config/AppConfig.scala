@@ -25,7 +25,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val appName: String = config.get[String]("appName")
   val pegaUrl: PegaUrlConfig = PegaUrlConfig(
-    url = servicesConfig.baseUrl("pega-proof-of-concept-stubs") + config.get[String]("pega-proof-of-concept-stubs-uris.submit-payload")
+    url = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.submit-payload")
   )
 }
 
