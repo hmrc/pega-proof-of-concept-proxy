@@ -29,11 +29,13 @@ import uk.gov.hmrc.pegaproofofconceptproxy.config.AppConfig
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PegaStubConnector @Inject() (client: HttpClientV2, config: AppConfig)(implicit ec: ExecutionContext) extends Logging {
+class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 
-  val pegaProxyStubUrl: String = config.pegaProxyStub.url
-  def submitPayloadToStub(payload: Payload)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    client.post(url"$pegaProxyStubUrl")
+  val pegaUrl: String = config.pegaUrl.url
+  def submitPayload(payload: Payload)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    println("-----------------------")
+    println(pegaUrl)
+    client.post(url"$pegaUrl")
       .withBody(Json.toJson(payload))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .map {

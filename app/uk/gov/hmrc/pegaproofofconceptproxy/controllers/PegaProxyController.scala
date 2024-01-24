@@ -19,7 +19,7 @@ package uk.gov.hmrc.pegaproofofconceptproxy.controllers
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.pegaproofofconceptproxy.connector.PegaStubConnector
+import uk.gov.hmrc.pegaproofofconceptproxy.connector.PegaConnector
 import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
 import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload.formats
 import cats.syntax.eq._
@@ -28,12 +28,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class PegaProxyController @Inject() (cc: ControllerComponents, pegaStubConnector: PegaStubConnector)(implicit ec: ExecutionContext)
+class PegaProxyController @Inject() (cc: ControllerComponents, pegaConnector: PegaConnector)(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
   val payload: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Payload]{ payLoad =>
-      pegaStubConnector.submitPayloadToStub(payLoad).map{
+      pegaConnector.submitPayload(payLoad).map{
         case response if response.status === 200 => Ok
         case _                                   => InternalServerError
       }

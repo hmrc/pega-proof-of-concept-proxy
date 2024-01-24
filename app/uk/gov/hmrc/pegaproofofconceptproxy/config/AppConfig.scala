@@ -18,16 +18,17 @@ package uk.gov.hmrc.pegaproofofconceptproxy.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) {
+class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
   val appName: String = config.get[String]("appName")
-  val pegaProxyStub: PegaProxyStubConfig = PegaProxyStubConfig(
-    url = config.get[String]("pega-proof-of-concept-stubs.baseUrl") + config.get[String]("pega-proof-of-concept-stubs-uris.submit-payload")
+  val pegaUrl: PegaUrlConfig = PegaUrlConfig(
+    url = servicesConfig.baseUrl("pega-proof-of-concept-stubs") + config.get[String]("pega-proof-of-concept-stubs-uris.submit-payload")
   )
 }
 
-final case class PegaProxyStubConfig(
+final case class PegaUrlConfig(
     url: String
 )

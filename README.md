@@ -1,7 +1,24 @@
+pega-proof-of-concept-proxy
+================================
 
-# pega-proof-of-concept-proxy
+Proxy microservice proof of concept for future PEGA work, submits a string to PEGA-API
 
-This is a placeholder README.md for a new repository
+## Public API
+
+| Path                                                            | Description                                  |
+|-----------------------------------------------------------------|----------------------------------------------|
+| [POST /pega-proof-of-concept-proxy/submit-payload](#post-submit-payload) | Submits payload to pega proof of concept API |
+
+## POST /submit-payload
+Submits payload to pega proof of concept API.
+
+**Example request**
+
+```json
+{
+    "data": "exampleString"
+}
+```
 
 ### License
 
