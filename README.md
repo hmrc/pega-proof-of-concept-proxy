@@ -7,9 +7,9 @@ Proxy microservice proof of concept for future PEGA work, submits a string to PE
 
 | Path                                                            | Description                                  |
 |-----------------------------------------------------------------|----------------------------------------------|
-| [POST /pega-proof-of-concept-proxy/submit-payload](#post-submit-payload) | Submits payload to pega proof of concept API |
+| [POST /pega-proof-of-concept-proxy/start-case](#post-start-case) | Submits payload to pega proof of concept API |
 
-## POST /submit-payload
+## POST /start-case
 Submits payload to pega proof of concept API.
 
 **Example request**

@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.pegaproofofconceptproxy.utils
+package uk.gov.hmrc.pegaproofofconceptproxy.models
 
-import org.scalacheck.Gen
-import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
+import play.api.libs.json.{JsObject, Json, OFormat}
 
-trait Generators {
-  val nonEmptyStringGen: Gen[String] = for {
-    length <- Gen.chooseNum(1, 50)
-    str <- Gen.listOfN(length, Gen.alphaChar).map(_.mkString)
-  } yield str
-  val nonEmptyPayload: Gen[Payload] = for {
-    value <- nonEmptyStringGen
-  } yield Payload(value)
+final case class StartCaseRequest(caseTypeID: String, processID: String, parentCaseID: String, content: JsObject)
+
+object StartCaseRequest {
+
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  implicit val formats: OFormat[StartCaseRequest] = Json.format[StartCaseRequest]
+
+  val payload: StartCaseRequest = StartCaseRequest("HMRC-Debt-Work-AffordAssess", "", "", Json.obj())
 }
