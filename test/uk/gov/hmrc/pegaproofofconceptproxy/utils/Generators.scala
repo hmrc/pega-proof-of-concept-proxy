@@ -17,6 +17,7 @@
 package uk.gov.hmrc.pegaproofofconceptproxy.utils
 
 import org.scalacheck.Gen
+import play.api.libs.json.Json
 import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
 
 trait Generators {
@@ -26,5 +27,5 @@ trait Generators {
   } yield str
   val nonEmptyPayload: Gen[Payload] = for {
     value <- nonEmptyStringGen
-  } yield Payload(value)
+  } yield Payload(value, "", "", Json.obj())
 }

@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.pegaproofofconceptproxy.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsObject, Json, OFormat}
 
-final case class Payload(data: String)
+final case class Payload(caseTypeID: String, processID: String, parentCaseID: String, content: JsObject)
 
 object Payload {
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val formats: OFormat[Payload] = Json.format[Payload]
+
+  val payload: Payload = Payload("HMRC-Debt-Work-AffordAssess", "", "", Json.obj())
 }

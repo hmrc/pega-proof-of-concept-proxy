@@ -17,24 +17,27 @@
 package uk.gov.hmrc.pegaproofofconceptproxy.connector
 
 import com.google.inject.{Inject, Singleton}
-import play.api.libs.json.Json
 import play.api.Logging
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
-import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
+import play.api.http.HeaderNames
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.pegaproofofconceptproxy.config.AppConfig
+import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.util.Base64
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig)(implicit ec: ExecutionContext) extends Logging {
+class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig, servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) extends Logging {
 
   val pegaUrl: String = config.pegaUrl.url
   def submitPayload(payload: Payload)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     client.post(url"$pegaUrl")
       .withBody(Json.toJson(payload))
+      .setHeader(HeaderNames.AUTHORIZATION -> "Basic ".concat(authorizationHeaderValue))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .map {
         case Right(response) => response
@@ -43,5 +46,10 @@ class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig)(implicit
           throw err
       }
   }
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  def toBase64(s: String): String = Base64.getEncoder.encodeToString(s.getBytes("UTF-8"))
+  private val userName: String = servicesConfig.getString("authDetails.username")
+  private val password: String = servicesConfig.getString("authDetails.password")
+  private val authorizationHeaderValue: String = toBase64(s"$userName:$password")
 
 }
