@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.pegaproofofconceptproxy.config.AppConfig
-import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
+import uk.gov.hmrc.pegaproofofconceptproxy.models.StartCaseRequest
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.util.Base64
@@ -34,9 +34,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig, servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) extends Logging {
 
   val pegaUrl: String = config.pegaUrl.url
-  def submitPayload(payload: Payload)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+  def startCase(startCaseRequest: StartCaseRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     client.post(url"$pegaUrl")
-      .withBody(Json.toJson(payload))
+      .withBody(Json.toJson(startCaseRequest))
       .setHeader(HeaderNames.AUTHORIZATION -> "Basic ".concat(authorizationHeaderValue))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .map {

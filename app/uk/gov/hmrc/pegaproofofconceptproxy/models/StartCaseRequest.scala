@@ -18,12 +18,12 @@ package uk.gov.hmrc.pegaproofofconceptproxy.models
 
 import play.api.libs.json.{JsObject, Json, OFormat}
 
-final case class Payload(caseTypeID: String, processID: String, parentCaseID: String, content: JsObject)
+final case class StartCaseRequest(caseTypeID: String, processID: String, parentCaseID: String, content: JsObject)
 
-object Payload {
+object StartCaseRequest {
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
-  implicit val formats: OFormat[Payload] = Json.format[Payload]
+  implicit val formats: OFormat[StartCaseRequest] = Json.format[StartCaseRequest]
 
-  val payload: Payload = Payload("HMRC-Debt-Work-AffordAssess", "", "", Json.obj())
+  val payload: StartCaseRequest = StartCaseRequest("HMRC-Debt-Work-AffordAssess", "", "", Json.obj())
 }

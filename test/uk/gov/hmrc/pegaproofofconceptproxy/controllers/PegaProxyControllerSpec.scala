@@ -16,24 +16,20 @@
 
 package uk.gov.hmrc.pegaproofofconceptproxy.controllers
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, post, postRequestedFor, stubFor, urlPathEqualTo, verify}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.http.{HeaderNames, Status}
-import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{defaultAwaitTimeout, status}
 import uk.gov.hmrc.http.test.ExternalWireMockSupport
-import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload
-import uk.gov.hmrc.pegaproofofconceptproxy.models.Payload.formats
 import uk.gov.hmrc.pegaproofofconceptproxy.testsupport.FakeApplicationProvider
-import uk.gov.hmrc.pegaproofofconceptproxy.utils.Generators
 
 class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with ExternalWireMockSupport with FakeApplicationProvider
-  with Generators with ScalaCheckDrivenPropertyChecks {
+  with ScalaCheckDrivenPropertyChecks {
 
   private val controller = app.injector.instanceOf[PegaProxyController]
   def verifyAuthHeader(url: String): Unit = eventually {
@@ -46,7 +42,7 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
   "PegaProxyController" should {
     "return ok if stubs return ok" in {
       stubFor(
-        post(urlPathEqualTo("/pega-proof-of-concept-stubs/submit-payload"))
+        post(urlPathEqualTo("/pega-proof-of-concept-stubs/start-case"))
           .willReturn(aResponse().withStatus(200).withBody(
             """
               |{
@@ -58,24 +54,20 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
               |""".stripMargin
           ))
       )
-      val fakeRequestWithJson = FakeRequest().withBody(Json.toJsObject(Payload.payload))
 
-      val result = controller.payload()(fakeRequestWithJson)
+      val result = controller.startCase()(FakeRequest())
       status(result) shouldBe Status.OK
 
-      verifyAuthHeader("/pega-proof-of-concept-stubs/submit-payload")
+      verifyAuthHeader("/pega-proof-of-concept-stubs/start-case")
     }
     "return internal server error if something wrong with response status not 200" in {
-      forAll(nonEmptyPayload) { payload =>
-        stubFor(
-          post(urlPathEqualTo("/pega-proof-of-concept-stubs/submit-payload"))
-            .willReturn(aResponse().withStatus(204))
-        )
-        val fakeRequestWithJson = FakeRequest().withBody(Json.toJsObject(payload))
+      stubFor(
+        post(urlPathEqualTo("/pega-proof-of-concept-stubs/start-case"))
+          .willReturn(aResponse().withStatus(204))
+      )
 
-        val result = controller.payload()(fakeRequestWithJson)
-        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-      }
+      val result = controller.startCase()(FakeRequest())
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
   }
 
