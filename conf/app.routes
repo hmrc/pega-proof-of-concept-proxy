@@ -1,3 +1,4 @@
 # microservice specific routes
 
 POST       /start-case            uk.gov.hmrc.pegaproofofconceptproxy.controllers.PegaProxyController.startCase
+GET        /case/:caseId          uk.gov.hmrc.pegaproofofconceptproxy.controllers.PegaProxyController.getCase(caseId)
