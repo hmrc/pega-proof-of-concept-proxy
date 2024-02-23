@@ -17,6 +17,7 @@
 package uk.gov.hmrc.pegaproofofconceptproxy.controllers
 
 import cats.syntax.eq._
+import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.pegaproofofconceptproxy.connector.PegaConnector
 import uk.gov.hmrc.pegaproofofconceptproxy.models.StartCaseRequest
@@ -27,12 +28,23 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class PegaProxyController @Inject() (cc: ControllerComponents, pegaConnector: PegaConnector)(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+  extends BackendController(cc) with Logging {
 
   val startCase: Action[AnyContent] = Action.async { implicit request =>
     pegaConnector.startCase(StartCaseRequest.payload).map{
       case response if response.status === 200 => Ok(response.json)
-      case _                                   => InternalServerError
+      case err =>
+        logger.warn(s"call to start case came back from pega with status ${err.status.toString}")
+        InternalServerError
+    }
+  }
+
+  def getCase(caseId: String): Action[AnyContent] = Action.async { implicit request =>
+    pegaConnector.getCase(caseId).map {
+      case response if response.status === 200 => Ok(response.json)
+      case err =>
+        logger.warn(s"call to get case came back from pega with status ${err.status.toString}")
+        InternalServerError
     }
   }
 

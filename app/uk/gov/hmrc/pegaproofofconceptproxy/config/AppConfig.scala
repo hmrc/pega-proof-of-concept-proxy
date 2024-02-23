@@ -23,12 +23,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
-  val appName: String = config.get[String]("appName")
-  val pegaUrl: PegaUrlConfig = PegaUrlConfig(
-    url = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.start-case")
-  )
-}
+  val pegaStartCaseUrl: String = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.start-case")
+  val pegaGetCaseUrl: String = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.get-case")
 
-final case class PegaUrlConfig(
-    url: String
-)
+}

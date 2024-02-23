@@ -17,14 +17,14 @@
 package uk.gov.hmrc.pegaproofofconceptproxy.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.http.{HeaderNames, Status}
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{defaultAwaitTimeout, status}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.http.test.ExternalWireMockSupport
 import uk.gov.hmrc.pegaproofofconceptproxy.testsupport.FakeApplicationProvider
 
@@ -32,43 +32,91 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
   with ScalaCheckDrivenPropertyChecks {
 
   private val controller = app.injector.instanceOf[PegaProxyController]
-  def verifyAuthHeader(url: String): Unit = eventually {
-    verify(
-      postRequestedFor(urlPathEqualTo(url))
-        .withHeader(HeaderNames.AUTHORIZATION, equalTo("Basic dToxMjM0"))
-    )
-  }
 
-  "PegaProxyController" should {
-    "return ok if stubs return ok" in {
-      stubFor(
-        post(urlPathEqualTo("/pega-proof-of-concept-stubs/start-case"))
-          .willReturn(aResponse().withStatus(200).withBody(
-            """
-              |{
-              |  "ID":"HMRC-DEBT-WORK A-13002",
-              |  "nextAssignmentID":"ASSIGN-WORKLIST HMRC-DEBT-WORK A-13002!STARTAFFORDABILITYASSESSMENT_FLOW",
-              |  "nextPageID":"Perform",
-              |  "pxObjClass":"Pega-API-CaseManagement-Case"
-              |}
-              |""".stripMargin
-          ))
-      )
+  "PegaProxyController" when {
 
-      val result = controller.startCase()(FakeRequest())
-      status(result) shouldBe Status.OK
+    "handling start case" should {
 
-      verifyAuthHeader("/pega-proof-of-concept-stubs/start-case")
+      val url: String = "/pega-proof-of-concept-stubs/start-case"
+
+      "return ok if pega return ok" in {
+
+        stubFor(
+          post(urlPathEqualTo(url))
+            .willReturn(aResponse().withStatus(200).withBody(
+              """
+                |{
+                |  "ID":"HMRC-DEBT-WORK A-13002",
+                |  "nextAssignmentID":"ASSIGN-WORKLIST HMRC-DEBT-WORK A-13002!STARTAFFORDABILITYASSESSMENT_FLOW",
+                |  "nextPageID":"Perform",
+                |  "pxObjClass":"Pega-API-CaseManagement-Case"
+                |}
+                |""".stripMargin
+            ))
+        )
+
+        val result = controller.startCase()(FakeRequest())
+        status(result) shouldBe Status.OK
+
+        verify(
+          postRequestedFor(urlPathEqualTo(url))
+            .withHeader(HeaderNames.AUTHORIZATION, equalTo("Basic dToxMjM0"))
+        )
+      }
+
+      "return internal server error if something wrong with response status not 200" in {
+
+        stubFor(
+          post(urlPathEqualTo(url))
+            .willReturn(aResponse().withStatus(204))
+        )
+
+        val result = controller.startCase()(FakeRequest())
+        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      }
     }
-    "return internal server error if something wrong with response status not 200" in {
-      stubFor(
-        post(urlPathEqualTo("/pega-proof-of-concept-stubs/start-case"))
-          .willReturn(aResponse().withStatus(204))
-      )
 
-      val result = controller.startCase()(FakeRequest())
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    "handling get case" should {
+
+      val caseId = "beans"
+      val url: String = s"/pega-proof-of-concept-stubs/case/$caseId"
+
+      "return ok if pega returns ok" in {
+
+        val responseJson = Json.parse(
+          """
+            |{
+            |  "a":"b"
+            |}
+            |""".stripMargin
+        )
+        stubFor(
+          get(urlPathEqualTo(url))
+            .willReturn(aResponse().withStatus(200).withBody(responseJson.toString()))
+        )
+
+        val result = controller.getCase(caseId)(FakeRequest())
+        status(result) shouldBe Status.OK
+        contentAsJson(result) shouldBe responseJson
+
+        verify(
+          getRequestedFor(urlPathEqualTo(url))
+            .withHeader(HeaderNames.AUTHORIZATION, equalTo("Basic dToxMjM0"))
+        )
+      }
+
+      "return internal server error if something wrong with response status not 200" in {
+
+        stubFor(
+          get(urlPathEqualTo(url))
+            .willReturn(aResponse().withStatus(204))
+        )
+
+        val result = controller.getCase(caseId)(FakeRequest())
+        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      }
     }
+
   }
 
 }
