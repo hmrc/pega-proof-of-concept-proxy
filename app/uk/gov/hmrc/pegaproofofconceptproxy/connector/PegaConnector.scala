@@ -34,18 +34,24 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig, servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) extends Logging {
 
-  def startCase(startCaseRequest: StartCaseRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    client.post(url"${config.pegaStartCaseUrl}")
+  def startCase(startCaseRequest: StartCaseRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val postRequest = client.post(url"${config.pegaStartCaseUrl}")
+    val withProxyIfRequired = if (config.useProxy) postRequest.withProxy else postRequest
+    withProxyIfRequired
       .withBody(Json.toJson(startCaseRequest))
       .setHeader(HeaderNames.AUTHORIZATION -> "Basic ".concat(authorizationHeaderValue))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .map(_.leftMap(throw _).merge)
+  }
 
-  def getCase(caseId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    client.get(url"${config.pegaGetCaseUrl}/$caseId")
+  def getCase(caseId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val getRequest = client.get(url"${config.pegaGetCaseUrl}/$caseId")
+    val withProxyIfRequired = if (config.useProxy) getRequest.withProxy else getRequest
+    withProxyIfRequired
       .setHeader(HeaderNames.AUTHORIZATION -> "Basic ".concat(authorizationHeaderValue))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .map(_.leftMap(throw _).merge)
+  }
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
   def toBase64(s: String): String = Base64.getEncoder.encodeToString(s.getBytes("UTF-8"))
