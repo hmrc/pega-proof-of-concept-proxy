@@ -25,6 +25,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val pegaStartCaseUrl: String = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.start-case")
   val pegaGetCaseUrl: String = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.get-case")
-  val useProxy: Boolean = config.get[Boolean]("proxy.proxyRequiredForThisEnvironment")
 
 }

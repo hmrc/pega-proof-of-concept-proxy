@@ -24,7 +24,8 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
+import play.api.test.Helpers.{await, contentAsJson, defaultAwaitTimeout, status}
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.ExternalWireMockSupport
 import uk.gov.hmrc.pegaproofofconceptproxy.testsupport.FakeApplicationProvider
 
@@ -43,7 +44,7 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
 
         stubFor(
           post(urlPathEqualTo(url))
-            .willReturn(aResponse().withStatus(200).withBody(
+            .willReturn(aResponse().withStatus(201).withBody(
               """
                 |{
                 |  "ID":"HMRC-DEBT-WORK A-13002",
@@ -56,7 +57,7 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
         )
 
         val result = controller.startCase()(FakeRequest())
-        status(result) shouldBe Status.OK
+        status(result) shouldBe Status.CREATED
 
         verify(
           postRequestedFor(urlPathEqualTo(url))
@@ -64,15 +65,16 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
         )
       }
 
-      "return internal server error if something wrong with response status not 200" in {
+      "return an error status if something wrong with response status not 200" in {
 
         stubFor(
           post(urlPathEqualTo(url))
-            .willReturn(aResponse().withStatus(204))
+            .willReturn(aResponse().withStatus(503))
         )
 
-        val result = controller.startCase()(FakeRequest())
-        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+        val exception = intercept[UpstreamErrorResponse](await(controller.startCase()(FakeRequest())))
+
+        exception.statusCode shouldBe Status.SERVICE_UNAVAILABLE
       }
     }
 
@@ -105,15 +107,15 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
         )
       }
 
-      "return internal server error if something wrong with response status not 200" in {
+      "return an error status if something wrong with response status not 200" in {
 
         stubFor(
           get(urlPathEqualTo(url))
-            .willReturn(aResponse().withStatus(204))
+            .willReturn(aResponse().withStatus(400))
         )
 
-        val result = controller.getCase(caseId)(FakeRequest())
-        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+        val exception = intercept[UpstreamErrorResponse](await(controller.getCase(caseId)(FakeRequest())))
+        exception.statusCode shouldBe Status.BAD_REQUEST
       }
     }
 
