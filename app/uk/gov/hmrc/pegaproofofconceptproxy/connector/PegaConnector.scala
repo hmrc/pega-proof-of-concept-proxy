@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.pegaproofofconceptproxy.connector
 
+import cats.syntax.either._
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.http.HeaderNames
@@ -25,37 +26,27 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.pegaproofofconceptproxy.config.AppConfig
 import uk.gov.hmrc.pegaproofofconceptproxy.models.StartCaseRequest
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import cats.syntax.either._
 
-import java.util.Base64
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig, servicesConfig: ServicesConfig)(implicit ec: ExecutionContext) extends Logging {
+class PegaConnector @Inject() (client: HttpClientV2, config: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 
-  def startCase(startCaseRequest: StartCaseRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def startCase(startCaseRequest: StartCaseRequest, pegaToken: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     client
       .post(url"${config.pegaStartCaseUrl}")
       .withProxy
       .withBody(Json.toJson(startCaseRequest))
-      .setHeader(HeaderNames.AUTHORIZATION -> "Basic ".concat(authorizationHeaderValue))
+      .setHeader(HeaderNames.AUTHORIZATION -> "Bearer ".concat(pegaToken))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .map(_.leftMap(throw _).merge)
 
-  def getCase(caseId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def getCase(caseId: String, pegaToken: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     client
       .get(url"${config.pegaGetCaseUrl}/$caseId")
       .withProxy
-      .setHeader(HeaderNames.AUTHORIZATION -> "Basic ".concat(authorizationHeaderValue))
+      .setHeader(HeaderNames.AUTHORIZATION -> "Bearer ".concat(pegaToken))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .map(_.leftMap(throw _).merge)
-
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
-  def toBase64(s: String): String = Base64.getEncoder.encodeToString(s.getBytes("UTF-8"))
-
-  private val userName: String = servicesConfig.getString("authDetails.username")
-  private val password: String = servicesConfig.getString("authDetails.password")
-  private val authorizationHeaderValue: String = toBase64(s"$userName:$password")
 
 }
