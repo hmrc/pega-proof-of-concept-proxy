@@ -79,6 +79,18 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
         )
       }
 
+      "return an error status if getting access token fails with status not 200" in {
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(401))
+        )
+
+        val exception = intercept[UpstreamErrorResponse](await(controller.startCase()(FakeRequest())))
+
+        exception.statusCode shouldBe Status.UNAUTHORIZED
+      }
+
       "return an error status if something wrong with response status not 200" in {
 
         stubFor(
@@ -147,6 +159,18 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
           getRequestedFor(urlPathEqualTo(url))
             .withHeader(HeaderNames.AUTHORIZATION, equalTo("Bearer dToxMjM0"))
         )
+      }
+
+      "return an error status if getting access token fails with status not 200" in {
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(503))
+        )
+
+        val exception = intercept[UpstreamErrorResponse](await(controller.startCase()(FakeRequest())))
+
+        exception.statusCode shouldBe Status.SERVICE_UNAVAILABLE
       }
 
       "return an error status if something wrong with response status not 200" in {
