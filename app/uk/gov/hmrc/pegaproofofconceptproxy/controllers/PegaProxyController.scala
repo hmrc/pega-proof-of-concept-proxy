@@ -21,21 +21,28 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.pegaproofofconceptproxy.connector.PegaConnector
 import uk.gov.hmrc.pegaproofofconceptproxy.models.StartCaseRequest
+import uk.gov.hmrc.pegaproofofconceptproxy.services.PegaService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class PegaProxyController @Inject() (cc: ControllerComponents, pegaConnector: PegaConnector)(implicit ec: ExecutionContext)
+class PegaProxyController @Inject() (cc: ControllerComponents, pegaService: PegaService, pegaConnector: PegaConnector)(implicit ec: ExecutionContext)
   extends BackendController(cc) with Logging {
 
   val startCase: Action[AnyContent] = Action.async { implicit request =>
-    pegaConnector.startCase(StartCaseRequest.payload).map(forwardResponse)
+    for {
+      pegaToken <- pegaService.callTokenAPI()
+      startCaseResponse <- pegaConnector.startCase(StartCaseRequest.payload, pegaToken.access_token)
+    } yield forwardResponse(startCaseResponse)
   }
 
   def getCase(caseId: String): Action[AnyContent] = Action.async { implicit request =>
-    pegaConnector.getCase(caseId).map(forwardResponse)
+    for {
+      pegaToken <- pegaService.callTokenAPI()
+      getCaseRespone <- pegaConnector.getCase(caseId, pegaToken.access_token)
+    } yield forwardResponse(getCaseRespone)
   }
 
   private def forwardResponse(httpResponse: HttpResponse): Result =

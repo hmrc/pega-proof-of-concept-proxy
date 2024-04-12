@@ -14,17 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.pegaproofofconceptproxy.config
+package uk.gov.hmrc.pegaproofofconceptproxy.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
-@Singleton
-class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
-
-  val pegaStartCaseUrl: String = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.start-case")
-  val pegaGetCaseUrl: String = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.get-case")
-  val pegaTokenUrl: String = servicesConfig.baseUrl("pega") + config.get[String]("pega-uris.get-token")
-
-}
+final case class PegaToken(access_token: String, token_type: String, expires_in: Int)

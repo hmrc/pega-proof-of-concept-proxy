@@ -39,8 +39,22 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
     "handling start case" should {
 
       val url: String = "/pega-proof-of-concept-stubs/start-case"
+      val tokenUrl: String = "/pega-proof-of-concept-stubs/get-token"
 
       "return ok if pega return ok" in {
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(200).withBody(
+              """
+                |{
+                |  "access_token": "dToxMjM0",
+                |  "token_type": "bearer",
+                |  "expires_in": 3600
+                |}
+                |""".stripMargin
+            ))
+        )
 
         stubFor(
           post(urlPathEqualTo(url))
@@ -61,11 +75,36 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
 
         verify(
           postRequestedFor(urlPathEqualTo(url))
-            .withHeader(HeaderNames.AUTHORIZATION, equalTo("Basic dToxMjM0"))
+            .withHeader(HeaderNames.AUTHORIZATION, equalTo("Bearer dToxMjM0"))
         )
       }
 
+      "return an error status if getting access token fails with status not 200" in {
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(401))
+        )
+
+        val exception = intercept[UpstreamErrorResponse](await(controller.startCase()(FakeRequest())))
+
+        exception.statusCode shouldBe Status.UNAUTHORIZED
+      }
+
       "return an error status if something wrong with response status not 200" in {
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(200).withBody(
+              """
+                |{
+                |  "access_token": "dToxMjM0",
+                |  "token_type": "bearer",
+                |  "expires_in": 3600
+                |}
+                |""".stripMargin
+            ))
+        )
 
         stubFor(
           post(urlPathEqualTo(url))
@@ -82,6 +121,7 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
 
       val caseId = "beans"
       val url: String = s"/pega-proof-of-concept-stubs/case/$caseId"
+      val tokenUrl: String = "/pega-proof-of-concept-stubs/get-token"
 
       "return ok if pega returns ok" in {
 
@@ -92,6 +132,20 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
             |}
             |""".stripMargin
         )
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(200).withBody(
+              """
+                |{
+                |  "access_token": "dToxMjM0",
+                |  "token_type": "bearer",
+                |  "expires_in": 3600
+                |}
+                |""".stripMargin
+            ))
+        )
+
         stubFor(
           get(urlPathEqualTo(url))
             .willReturn(aResponse().withStatus(200).withBody(responseJson.toString()))
@@ -103,11 +157,36 @@ class PegaProxyControllerSpec extends AnyWordSpec with Matchers with GuiceOneApp
 
         verify(
           getRequestedFor(urlPathEqualTo(url))
-            .withHeader(HeaderNames.AUTHORIZATION, equalTo("Basic dToxMjM0"))
+            .withHeader(HeaderNames.AUTHORIZATION, equalTo("Bearer dToxMjM0"))
         )
       }
 
+      "return an error status if getting access token fails with status not 200" in {
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(503))
+        )
+
+        val exception = intercept[UpstreamErrorResponse](await(controller.startCase()(FakeRequest())))
+
+        exception.statusCode shouldBe Status.SERVICE_UNAVAILABLE
+      }
+
       "return an error status if something wrong with response status not 200" in {
+
+        stubFor(
+          post(urlPathEqualTo(tokenUrl))
+            .willReturn(aResponse().withStatus(200).withBody(
+              """
+                |{
+                |  "access_token": "dToxMjM0",
+                |  "token_type": "bearer",
+                |  "expires_in": 3600
+                |}
+                |""".stripMargin
+            ))
+        )
 
         stubFor(
           get(urlPathEqualTo(url))
